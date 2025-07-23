@@ -131,7 +131,7 @@ http://localhost:8000
 
 - Detection Logic Demo
 This video showcases how the detector service processes incoming frames, identifies worker violations or safe pickups.
-![Detection Demo Thumbnail](assets/images/detection_thumbnail.png)
+![Detection Demo Thumbnail](https://github.com/amira-medhat/Pizza-Store-Hygiene-Monitoring-System/blob/main/assests/images/detection_thumbnail.png?raw=true)
 🔗 Watch the Video: https://drive.google.com/file/d/1SaJffgct9BFOXKVHzT33Vpb-1Llt_U8y/view?usp=sharing
 
 - Streaming Service Demo
