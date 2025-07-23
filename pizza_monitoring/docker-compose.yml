@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
 
   rabbitmq:
@@ -18,24 +16,20 @@ services:
       retries: 5
 
   frame_reader:
-    build:
-      context: ./frame_reader
-      shm_size: '1gb'
+    build: ./frame_reader
     container_name: frame_reader
     depends_on:
       rabbitmq:
         condition: service_healthy
     volumes:
       - shared-data:/app/shared
-      - ${VIDEO_SOURCE:-./sample_video.mp4}:/app/video_source.mp4
+      - ${VIDEO_SOURCE:-./shared/Sah w b3dha ghalt (2).mp4}:/app/video_source.mp4
     environment:
       - RABBITMQ_HOST=rabbitmq
       - VIDEO_SOURCE=/app/video_source.mp4
 
   detector:
-    build: 
-      context: ./detection_service
-      shm_size: '2gb'
+    build: ./detection_service
     container_name: detector
     depends_on:
       rabbitmq:
@@ -54,9 +48,7 @@ services:
     #         - capabilities: [ gpu ] # requires Docker with GPU support
 
   streamer:
-    build:
-      context: ./streaming_service
-      shm_size: '1gb'
+    build: ./streaming_service
     container_name: streamer
     depends_on:
       rabbitmq:

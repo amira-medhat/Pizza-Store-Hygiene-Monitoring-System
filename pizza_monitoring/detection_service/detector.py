@@ -7,11 +7,21 @@ import json
 import base64
 import cv2
 import time
+import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 
 from detection_logic import process_frame
 from utils import decode_base64_frame
-from shared.config import RABBITMQ_HOST, RABBITMQ_QUEUE, PROCESSED_QUEUE
+from shared.config import RABBITMQ_HOST, RABBITMQ_QUEUE, PROCESSED_QUEUE, DB_PATH
+from database import init_db
+
+# Initialize the database
+try:
+    print(f"Initializing database at {DB_PATH}...")
+    init_db(DB_PATH)
+    print("Database initialized successfully!")
+except Exception as e:
+    print(f"Error initializing database: {e}")
 
 # Use a single worker for detection_logic to avoid race conditions with global variables
 # But use a separate thread pool for encoding/publishing to maintain throughput

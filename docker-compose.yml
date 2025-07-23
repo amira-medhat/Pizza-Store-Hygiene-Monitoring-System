@@ -1,30 +1,59 @@
-version: '3.9'
-
 services:
   rabbitmq:
-    extends:
-      file: ./pizza_monitoring/docker-compose.yml
-      service: rabbitmq
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # RabbitMQ (AMQP protocol)
+      - "15672:15672" # RabbitMQ Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frame_reader:
-    extends:
-      file: ./pizza_monitoring/docker-compose.yml
-      service: frame_reader
+    build: ./pizza_monitoring/frame_reader
+    container_name: frame_reader
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     volumes:
-      - ./pizza_monitoring/shared:/app/shared
-      - ${VIDEO_SOURCE:-./sample_video.mp4}:/app/video_source.mp4
+      - shared-data:/app/shared
+      - ./pizza_monitoring/shared/Sah w b3dha ghalt (2).mp4:/app/video_source.mp4
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - VIDEO_SOURCE=/app/video_source.mp4
 
   detector:
-    extends:
-      file: ./pizza_monitoring/docker-compose.yml
-      service: detector
+    build: ./pizza_monitoring/detection_service
+    container_name: detector
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     volumes:
-      - ./pizza_monitoring/shared:/app/shared
+      - shared-data:/app/shared
       - ./pizza_monitoring/shared:/app/weights
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - MODEL_PATH=/app/weights/best.pt
+      - DB_PATH=/app/shared/violations.db
 
   streamer:
-    extends:
-      file: ./pizza_monitoring/docker-compose.yml
-      service: streamer
+    build: ./pizza_monitoring/streaming_service
+    container_name: streamer
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
     volumes:
-      - ./pizza_monitoring/shared:/app/shared
+      - shared-data:/app/shared
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - DB_PATH=/app/shared/violations.db
+
+volumes:
+  shared-data:

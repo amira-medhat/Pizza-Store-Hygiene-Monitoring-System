@@ -1,31 +1,36 @@
-# Use standard Python image instead of CUDA for better compatibility
 FROM python:3.9-slim
 
-# System dependencies - minimal installation
-RUN apt-get clean && \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-    git libgl1-mesa-glx && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install required system libraries for OpenCV one by one
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends libgl1-mesa-glx
+RUN apt-get install -y --no-install-recommends libglib2.0-0
+RUN apt-get install -y --no-install-recommends libsm6
+RUN apt-get install -y --no-install-recommends libxext6
+RUN apt-get install -y --no-install-recommends libxrender-dev
+RUN rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy requirements first for better caching
-COPY requirements.txt /app/
+# Copy only what's needed for pip install
+COPY requirements.txt .
 
-# Install Python dependencies in smaller batches to avoid memory issues
-RUN pip install --upgrade pip
-RUN pip install opencv-python==4.8.1.78 numpy==1.24.3 pika==1.3.2
-RUN pip install torch==2.3.1 torchvision==0.18.1
-RUN pip install ultralytics==8.3.166
+# Install minimal dependencies one by one to avoid I/O errors
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir opencv-python-headless==4.8.1.78
+RUN pip install --no-cache-dir numpy==1.24.3
+RUN pip install --no-cache-dir pika==1.3.2
+RUN pip install --no-cache-dir torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir ultralytics==8.3.166
 
 # Copy project code
-COPY . /app
+COPY . .
 
 # Create directory for weights
 RUN mkdir -p /app/weights
 
-# Default command to run your detection logic
+# Create shared directory and copy config.py
+RUN mkdir -p /app/shared
+COPY shared/config.py /app/shared/
+
+# Initialize database and start detector
 CMD ["python", "detector.py"]

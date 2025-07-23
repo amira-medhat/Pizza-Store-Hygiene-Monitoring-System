@@ -76,7 +76,7 @@ def consume_frames():
 
     try:
         connection_params = pika.ConnectionParameters(
-            host="localhost",
+            host=os.environ.get("RABBITMQ_HOST", "localhost"),
             heartbeat=600,
             blocked_connection_timeout=300,
             socket_timeout=10.0

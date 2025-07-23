@@ -1,26 +1,27 @@
 FROM python:3.9-slim
 
-# Install minimal system dependencies
-RUN apt-get clean && \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install required system libraries for OpenCV one by one
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends libgl1-mesa-glx
+RUN rm -rf /var/lib/apt/lists/*
 
-# Set working directory inside container
 WORKDIR /app
 
-# Copy requirements first for better caching
-COPY requirements.txt /app/
+# Copy requirements first
+COPY requirements.txt .
 
-# Install Python dependencies in smaller batches
-RUN pip install --upgrade pip
-RUN pip install opencv-python==4.8.1.78
-RUN pip install numpy==1.24.3 pika==1.3.2
+# Install Python dependencies one by one
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir opencv-python-headless==4.8.1.78
+RUN pip install --no-cache-dir numpy==1.24.3
+RUN pip install --no-cache-dir pika==1.3.2
 
 # Copy project code
-COPY . /app
+COPY . .
+
+# Create shared directory and copy config.py
+RUN mkdir -p /app/shared
+COPY shared/config.py /app/shared/
 
 # Run the reader
 CMD ["python", "reader.py"]
