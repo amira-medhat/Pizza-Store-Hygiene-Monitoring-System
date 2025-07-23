@@ -46,12 +46,12 @@ This project uses a microservices architecture to ensure scalability, maintainab
 - **SQLite**: Lightweight database for violation records
 - **Flask with waitress server**: Real-time updates to the frontend
 
-## 📦 System Requirements
+## 📦 System Used
 
 - **GPU**: NVIDIA GTX 1660 Ti (or equivalent)
 - **CPU**: Intel Core i7 (or equivalent)
-- **RAM**: 16GB minimum
-- **VRAM**: 6GB minimum
+- **RAM**: 16GB
+- **VRAM**: 6GB 
 - **OS**: Windows 11
 - **Python**: 3.9
 - **CUDA**: 11.7 (for GPU acceleration)
