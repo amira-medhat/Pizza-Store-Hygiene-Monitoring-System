@@ -1,10 +1,16 @@
-# pizza_monitoring/frame_reader/reader.py
+import sys
+import os
+# Add root directory to sys.path (pizza_monitoring)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from shared.config import RABBITMQ_HOST, RABBITMQ_QUEUE, VIDEO_SOURCE
 
 import cv2
 import pika
 import base64
 import time
-from config import RABBITMQ_HOST, RABBITMQ_QUEUE, VIDEO_SOURCE
+
+
 
 def encode_frame(frame):
     _, buffer = cv2.imencode('.jpg', frame)
@@ -39,7 +45,7 @@ def main():
             body=frame_data.encode('utf-8')
         )
         print("[FrameReader] 📤 Frame sent.")
-        time.sleep(1 / 10)  # ~10 FPS
+        time.sleep(1 / 30)  # ~30 FPS
 
     cap.release()
     print("[FrameReader] ✅ Done.")

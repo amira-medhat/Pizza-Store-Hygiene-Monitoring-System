@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  rabbitmq:
+    extends:
+      file: ./pizza_monitoring/docker-compose.yml
+      service: rabbitmq
+
+  frame_reader:
+    extends:
+      file: ./pizza_monitoring/docker-compose.yml
+      service: frame_reader
+    volumes:
+      - ./pizza_monitoring/shared:/app/shared
+      - ${VIDEO_SOURCE:-./sample_video.mp4}:/app/video_source.mp4
+
+  detector:
+    extends:
+      file: ./pizza_monitoring/docker-compose.yml
+      service: detector
+    volumes:
+      - ./pizza_monitoring/shared:/app/shared
+      - ./pizza_monitoring/shared:/app/weights
+
+  streamer:
+    extends:
+      file: ./pizza_monitoring/docker-compose.yml
+      service: streamer
+    volumes:
+      - ./pizza_monitoring/shared:/app/shared

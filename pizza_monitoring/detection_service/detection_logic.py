@@ -1,19 +1,22 @@
+import sys
+import os
+# Add root directory to sys.path (pizza_monitoring)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import cv2
 from ultralytics import YOLO
 import numpy as np
 import time
 from database import save_violation
 from datetime import datetime
-
+from shared.config import DB_PATH, MODEL_PATH, VIDEO_SOURCE
 # Load model with tracking enabled
-MODEL_PATH = r"D:\PizzaStore_Task\best.pt"
 model = YOLO(MODEL_PATH)
 print(model.names)
 model.to('cuda')
 model.model.half()  # Use FP16 for faster inference
 
 # Video capture setup to get FPS
-cap = cv2.VideoCapture(r"D:\PizzaStore_Task\Sah w b3dha ghalt (2).mp4")
+cap = cv2.VideoCapture(VIDEO_SOURCE)
 fps = cap.get(cv2.CAP_PROP_FPS)
 cap.release()
 print(f"Video FPS: {fps}")
@@ -296,7 +299,7 @@ def process_frame(frame, frame_id, state=None):
                 event['processed'] = True
 
     # Save to database with status only if there's an actual event
-    db_path = r"D:\PizzaStore_Task\pizza_monitoring\detection_service\violations.db"
+    db_path = DB_PATH
     
     # Check if we have a violation or safe pickup to record
     if is_violation or is_safe_pickup:

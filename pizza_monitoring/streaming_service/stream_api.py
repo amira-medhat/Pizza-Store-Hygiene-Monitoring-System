@@ -1,9 +1,13 @@
+import sys
+import os
+# Add root directory to sys.path (pizza_monitoring)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import Flask, Response, jsonify, render_template_string
 from waitress import serve
 import time
 import cv2
 import sqlite3
-from config import DB_PATH
+from shared.config import DB_PATH
 import state
 from rabbit_consumer import start_consumer_thread
 

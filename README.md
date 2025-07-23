@@ -56,7 +56,7 @@ This project uses a microservices architecture to ensure scalability, maintainab
 - **Python**: 3.9
 - **CUDA**: 11.7 (for GPU acceleration)
 
-## Setup Instructions
+## Setup Instructions (To run without Docker)
 
 ### 1. Environment Setup
 
@@ -89,26 +89,16 @@ pip install -r requirements.txt
 
 Edit the following files to match your system paths:
 
-1. `config.py`: Update paths for video sources, database, and RabbitMQ settings
+`config.py`in `shared` folder: Update paths for video sources, database, and RabbitMQ settings
    ```python
    # Example configuration
    VIDEO_SOURCE = r"D:\PizzaStore_Task\your_video_file.mp4"
    DB_PATH = r"D:\PizzaStore_Task\pizza_monitoring\detection_service\violations.db"
-   ```
-
-2. `detection_logic.py`: Update model path
-   ```python
    MODEL_PATH = r"D:\PizzaStore_Task\best.pt"
    ```
 
-### 4. Initialize Database
 
-Run the database initialization script:
-```powershell
-python init_db_script.py
-```
-
-### 5. Run the System
+### 4. Run the System
 
 Start all services using the provided PowerShell script:
 ```powershell
@@ -150,3 +140,58 @@ The system includes several optimizations:
 
 - Currently, the major bottleneck in system speed is YOLO detection latency, especially on high-resolution frames. So, to significantly reduce detection time, you can convert the YOLOv12 model to TensorRT format. TensorRT optimizes inference on NVIDIA GPUs and is ideal for deployment. But ensure that your GPU supports TensorRT because unfortunately mine doesn't.
 - Using more diverse and annotated training data will significantly improve the detection model’s accuracy and robustness in real-world scenarios.
+
+## Running With Docker
+
+### Prerequisites
+
+- [Docker](https://www.docker.com/products/docker-desktop/) installed
+- [Docker Compose](https://docs.docker.com/compose/install/) installed
+- For GPU support: [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+
+### Quick Start
+
+1. Clone this repository
+2. Place your video file in the project directory or specify its path using the `VIDEO_SOURCE` environment variable
+3. Run the system:
+
+```bash
+# From the root directory (Pizza Store Hygiene Monitoring System)
+docker-compose up
+```
+
+### Using Your Own Video
+
+```bash
+# Windows
+set VIDEO_SOURCE=C:\path\to\your\video.mp4
+docker-compose up
+
+# Linux/Mac
+export VIDEO_SOURCE=/path/to/your/video.mp4
+docker-compose up
+```
+
+### Accessing the Dashboard
+
+Open your browser and navigate to:
+- Dashboard: http://localhost:8000
+- RabbitMQ Management: http://localhost:15672 (username: guest, password: guest)
+
+### Running Without GPU
+
+If you don't have a GPU or NVIDIA drivers installed, modify the `docker-compose.yml` file to remove the GPU requirements:
+
+1. Open `docker-compose.yml`
+2. Remove or comment out the `deploy` section in the `detector` service
+
+### Troubleshooting
+
+- If services fail to start, check that RabbitMQ is running properly
+- Ensure your video file path is correct
+- Check Docker logs for specific error messages:
+  ```bash
+  docker-compose logs frame_reader
+  docker-compose logs detector
+  docker-compose logs streamer
+  ```

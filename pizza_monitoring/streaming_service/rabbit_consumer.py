@@ -1,3 +1,7 @@
+import sys
+import os
+# Add root directory to sys.path (pizza_monitoring)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pika
 import json
 import base64
@@ -7,7 +11,7 @@ from threading import Thread
 import queue
 import time
 import state
-from config import PROCESSED_QUEUE
+from shared.config import PROCESSED_QUEUE
 
 # Frame queue
 frame_queue = queue.Queue(maxsize=60)

@@ -1,19 +1,17 @@
-# detector.py (optimized with threading)
-import pika
 import sys
 import os
+# Add root directory to sys.path (pizza_monitoring)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import pika
 import json
 import base64
 import cv2
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-# Add root directory to sys.path (pizza_monitoring)
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 from detection_logic import process_frame
 from utils import decode_base64_frame
-from config import RABBITMQ_HOST, INPUT_QUEUE, PROCESSED_QUEUE
+from shared.config import RABBITMQ_HOST, RABBITMQ_QUEUE, PROCESSED_QUEUE
 
 # Use a single worker for detection_logic to avoid race conditions with global variables
 # But use a separate thread pool for encoding/publishing to maintain throughput
@@ -104,13 +102,13 @@ def run_detector():
     start_time = time.time()
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = connection.channel()
-    channel.queue_declare(queue=INPUT_QUEUE, durable=True)
+    channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
     
     # Set prefetch count to 1 to ensure we process one frame at a time
     # This helps maintain the correct order of frames and avoid overwhelming the detector
     channel.basic_qos(prefetch_count=1)
     
-    channel.basic_consume(queue=INPUT_QUEUE, on_message_callback=callback, auto_ack=True)
+    channel.basic_consume(queue=RABBITMQ_QUEUE, on_message_callback=callback, auto_ack=True)
     print("[Detector] 🟢 Started consuming frames...")
     print(f"[Detector] 🕒 Initialization took {time.time() - start_time:.2f} seconds")
     print(f"[Detector] 💡 Using 1 worker for detection and {publish_executor._max_workers} workers for publishing")

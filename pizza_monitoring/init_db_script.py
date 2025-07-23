@@ -1,4 +1,8 @@
+import sys
+import os
+# Add root directory to sys.path (pizza_monitoring)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from shared.config import DB_PATH
 from detection_service.database import init_db
 
-db_path = r"D:\PizzaStore_Task\pizza_monitoring\detection_service\violations.db"
-init_db(db_path)
+init_db(DB_PATH)
