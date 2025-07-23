@@ -96,9 +96,11 @@ Edit the following files to match your system paths:
    DB_PATH = r"D:\PizzaStore_Task\pizza_monitoring\detection_service\violations.db"
    MODEL_PATH = r"D:\PizzaStore_Task\best.pt"
    ```
+### 4. Configure ROIs
 
+Edit SCOOPER_CONTAINERS in pizza_monitoring\detection_service\detection_logic.py to adjust the static ROIs based on video.
 
-### 4. Run the System
+### 5. Run the System
 
 Start all services using the provided PowerShell script:
 ```powershell
@@ -157,14 +159,14 @@ The system includes several optimizations:
 
 ```bash
 # From the root directory (Pizza Store Hygiene Monitoring System)
-docker-compose up
+docker-compose build --no-cache
 ```
 
 ### Using Your Own Video
 
 ```bash
 # Windows
-set VIDEO_SOURCE=C:\path\to\your\video.mp4
+$env:VIDEO_SOURCE="C:\path\to\your\video.mp4"
 docker-compose up
 
 # Linux/Mac
