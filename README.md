@@ -197,3 +197,4 @@ If you don't have a GPU or NVIDIA drivers installed, modify the `docker-compose.
   docker-compose logs detector
   docker-compose logs streamer
   ```
+## See the TaskSubmission documentation for additional details
