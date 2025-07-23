@@ -13,7 +13,7 @@ A real-time computer vision system that monitors hygiene protocol compliance in 
 
 This project uses a microservices architecture to ensure scalability, maintainability, and separation of concerns:
 
-![System Diagram](assets/images/Block_Diagram.png)
+![System Diagram]([assets/images/Block_Diagram.png](https://github.com/amira-medhat/Pizza-Store-Hygiene-Monitoring-System/blob/3db39d0a5360a09b40cb4d69991a59f6d213ea88/assests/images/Block_Diagram.png))
 
 ### 🛠 Services
 
