@@ -129,13 +129,13 @@ http://localhost:8000
 
 ## 📽️ Demo
 
-- Detection Logic Demo
-This video showcases how the detector service processes incoming frames, identifies worker violations or safe pickups.
+### Detection Logic Demo
+- This video showcases how the detector service processes incoming frames, identifies worker violations or safe pickups.
 ![Detection Demo Thumbnail](https://github.com/amira-medhat/Pizza-Store-Hygiene-Monitoring-System/blob/main/assests/images/detection_thumbnail.png?raw=true)
 🔗 Watch the Video: https://drive.google.com/file/d/1SaJffgct9BFOXKVHzT33Vpb-1Llt_U8y/view?usp=sharing
 
-- Streaming Service Demo
-This video illustrates how the annotated frames (with bounding boxes, worker IDs, and violation alerts) are streamed live through the UI via the Flask-based streamer microservice.
+### Streaming Service Demo
+- This video illustrates how the annotated frames (with bounding boxes, worker IDs, and violation alerts) are streamed live through the UI via the Flask-based streamer microservice.
 ![Streaming Service Demo Thumbnail](https://github.com/amira-medhat/Pizza-Store-Hygiene-Monitoring-System/blob/main/assests/images/Streaming_thumbnail.png?raw=true)
 🔗 Watch the Video: https://drive.google.com/file/d/1iPb_gJYm-Ptjc0qTkFs2CS_76jdcXqF3/view?usp=sharing
 
