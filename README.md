@@ -83,6 +83,7 @@ pip install -r requirements.txt
 
    # Create queues (can be done through the management UI at http://localhost:15672)
    # Default credentials: guest/guest
+   docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
    ```
 
 ### 3. Configure Paths
