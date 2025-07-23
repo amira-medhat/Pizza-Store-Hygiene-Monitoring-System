@@ -13,7 +13,7 @@ A real-time computer vision system that monitors hygiene protocol compliance in 
 
 This project uses a microservices architecture to ensure scalability, maintainability, and separation of concerns:
 
-![System Diagram](assets/images/Block_Diagram.png)
+![System Diagram](https://github.com/amira-medhat/Pizza-Store-Hygiene-Monitoring-System/blob/main/assests/images/Block_Diagram.png?raw=true)
 
 ### 🛠 Services
 
@@ -46,12 +46,12 @@ This project uses a microservices architecture to ensure scalability, maintainab
 - **SQLite**: Lightweight database for violation records
 - **Flask with waitress server**: Real-time updates to the frontend
 
-## 📦 System Requirements
+## 📦 System Used
 
-- **GPU**: NVIDIA GTX 1660 Ti (or equivalent)
-- **CPU**: Intel Core i7 (or equivalent)
-- **RAM**: 16GB minimum
-- **VRAM**: 6GB minimum
+- **GPU**: NVIDIA GTX 1660 Ti
+- **CPU**: Intel Core i7
+- **RAM**: 16GB
+- **VRAM**: 6GB 
 - **OS**: Windows 11
 - **Python**: 3.9
 - **CUDA**: 11.7 (for GPU acceleration)
@@ -129,14 +129,14 @@ http://localhost:8000
 
 ## 📽️ Demo
 
-- Detection Logic Demo
-This video showcases how the detector service processes incoming frames, identifies worker violations or safe pickups.
-![Detection Demo Thumbnail](assets/images/detection_thumbnail.png)
+### Detection Logic Demo
+- This video showcases how the detector service processes incoming frames, identifies worker violations or safe pickups.
+![Detection Demo Thumbnail](https://github.com/amira-medhat/Pizza-Store-Hygiene-Monitoring-System/blob/main/assests/images/detection_thumbnail.png?raw=true)
 🔗 Watch the Video: https://drive.google.com/file/d/1SaJffgct9BFOXKVHzT33Vpb-1Llt_U8y/view?usp=sharing
 
-- Streaming Service Demo
-This video illustrates how the annotated frames (with bounding boxes, worker IDs, and violation alerts) are streamed live through the UI via the Flask-based streamer microservice.
-![Streaming Service Demo Thumbnail](assets/images/Streaming_thumbnail.png)
+### Streaming Service Demo
+- This video illustrates how the annotated frames (with bounding boxes, worker IDs, and violation alerts) are streamed live through the UI via the Flask-based streamer microservice.
+![Streaming Service Demo Thumbnail](https://github.com/amira-medhat/Pizza-Store-Hygiene-Monitoring-System/blob/main/assests/images/Streaming_thumbnail.png?raw=true)
 🔗 Watch the Video: https://drive.google.com/file/d/1iPb_gJYm-Ptjc0qTkFs2CS_76jdcXqF3/view?usp=sharing
 
 ## Performance Optimization
