@@ -48,8 +48,8 @@ This project uses a microservices architecture to ensure scalability, maintainab
 
 ## 📦 System Used
 
-- **GPU**: NVIDIA GTX 1660 Ti (or equivalent)
-- **CPU**: Intel Core i7 (or equivalent)
+- **GPU**: NVIDIA GTX 1660 Ti
+- **CPU**: Intel Core i7
 - **RAM**: 16GB
 - **VRAM**: 6GB 
 - **OS**: Windows 11
