@@ -84,7 +84,7 @@ def consume_frames():
         connection = pika.BlockingConnection(connection_params)
         channel = connection.channel()
 
-        channel.queue_declare(queue=PROCESSED_QUEUE, durable=True)
+        channel.queue_declare(queue=PROCESSED_QUEUE, durable=False)
         channel.basic_qos(prefetch_count=1)
         channel.basic_consume(queue=PROCESSED_QUEUE, on_message_callback=callback, auto_ack=False)
 

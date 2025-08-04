@@ -1,1 +1,0 @@
-# Make shared directory a proper Python package

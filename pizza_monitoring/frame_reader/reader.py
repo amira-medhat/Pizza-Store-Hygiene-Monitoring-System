@@ -19,7 +19,7 @@ def encode_frame(frame):
 def connect_rabbitmq():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = connection.channel()
-    channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
+    channel.queue_declare(queue=RABBITMQ_QUEUE, durable=False)
     return channel
 
 def main():
@@ -45,7 +45,6 @@ def main():
             body=frame_data.encode('utf-8')
         )
         print("[FrameReader] 📤 Frame sent.")
-        time.sleep(1 / 30)  # ~30 FPS
 
     cap.release()
     print("[FrameReader] ✅ Done.")

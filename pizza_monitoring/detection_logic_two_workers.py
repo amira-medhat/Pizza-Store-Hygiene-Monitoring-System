@@ -4,9 +4,9 @@ import numpy as np
 import time
 
 # Paths
-VIDEO_PATH = "Sah b3dha ghalt (4).mp4"
-MODEL_PATH = "best.pt"
-OUTPUT_PATH = "output_violation_logic_new.mp4"
+VIDEO_PATH = r"D:\PizzaStore_Task\Sah w b3dha ghalt (2).mp4"
+MODEL_PATH = r"D:\PizzaStore_Task\best.pt"
+OUTPUT_PATH = "output_Video_2nd.mp4"
 
 # Load model with tracking enabled
 model = YOLO(MODEL_PATH)
@@ -25,15 +25,21 @@ messages = []
 
 # ROI (over all containers)
 SCOOPER_CONTAINERS = [
-    (0, (470, 270, 525, 310)),
-    (1, (460, 310, 520, 350)),
-    (2, (450, 355, 500, 390)),
+    (0, (480, 270, 525, 320)),
+    (1, (460, 317, 515, 350)),
+    (2, (460, 350, 510, 400)),
 ]
+# SCOOPER_CONTAINERS = [
+#     (0, (470, 270, 525, 310)),
+#     (1, (460, 310, 520, 350)),
+#     (2, (450, 355, 500, 390)),
+# ]
 # Event buffer
 person_events = {}  # person_id -> list of events
 fps_grace = int(fps * 0) # Allow 2 seconds grace period for safe pickups
 last_safe_frame = {}  # person_id -> last safe frame
 worker_stats = {}  # Track statistics per worker
+worker_in_roi = {}  # Track which workers are currently in ROI
 
 # Track worker positions to maintain consistent IDs
 worker_positions = {}  # track_id -> last position (x, y)
@@ -71,6 +77,15 @@ def get_consistent_worker_id(track_id, position):
         # Update position
         worker_positions[track_id] = position
         return worker_id_map[track_id]
+    
+    # Check if this position is close to an existing worker (re-identification)
+    for existing_track_id, existing_pos in worker_positions.items():
+        if existing_track_id in worker_id_map:
+            dist = np.sqrt((position[0] - existing_pos[0])**2 + (position[1] - existing_pos[1])**2)
+            if dist < 150:  # If within 150 pixels, consider it the same worker
+                worker_id_map[track_id] = worker_id_map[existing_track_id]
+                worker_positions[track_id] = position
+                return worker_id_map[track_id]
     
     # New track_id, assign a new consistent worker ID
     worker_id_map[track_id] = next_worker_id
@@ -114,7 +129,7 @@ while cap.isOpened():
         break
 
     frame_id += 1
-    results = model.track(frame, persist=True, tracker="bytetrack.yaml", conf=0.03, iou=0.3, verbose=False)[0]
+    results = model.track(frame, persist=True, tracker="bytetrack.yaml", conf=0.0001, iou=0.3, verbose=False)[0]
 
     hands, scoopers, pizzas, persons = [], [], [], []
 
@@ -154,71 +169,77 @@ while cap.isOpened():
             person_hands[worker_id] = []
         person_hands[worker_id].append(hand)
     
-    # Process each worker's hands
+    # Track ROI entry/exit and record events on exit
+    current_frame_in_roi = set()
     for worker_id, worker_hands in person_hands.items():
+        worker_in_roi_this_frame = False
         for hand in worker_hands:
             for cid, roi in SCOOPER_CONTAINERS:
                 if is_inside(hand, roi):
-                    if worker_id not in person_events:
-                        person_events[worker_id] = []
-                    if worker_id in last_safe_frame and frame_id - last_safe_frame[worker_id] <= fps_grace:
-                        break
-                    if any(not e['processed'] for e in person_events[worker_id]):
-                        break
-                    person_events[worker_id].append({
-                        "start_frame": frame_id,
-                        "hand": hand,
-                        "roi_id": cid,
-                        "scooper_touched": False,
-                        "pizza_touched": False,
-                        "processed": False,
-                        "worker_id": worker_id
-                    })
+                    worker_in_roi_this_frame = True
+                    current_frame_in_roi.add(worker_id)
+                    # Start tracking if not already
+                    if worker_id not in worker_in_roi:
+                        worker_in_roi[worker_id] = {
+                            "start_frame": frame_id,
+                            "hand": hand,
+                            "roi_id": cid,
+                            "scooper_touched": False,
+                            "pizza_touched": False
+                        }
                     break
-
-    # Associate scoopers with workers based on proximity
-    worker_scoopers = {}
-    for scooper in scoopers:
-        worker_id = assign_hand_to_person(scooper, persons)
-        if worker_id is not None:
-            if worker_id not in worker_scoopers:
-                worker_scoopers[worker_id] = []
-            worker_scoopers[worker_id].append(scooper)
+            if worker_in_roi_this_frame:
+                break
     
-    # Process events for each worker
+    # Check for workers who exited ROI and record events
+    for worker_id in list(worker_in_roi.keys()):
+        if worker_id not in current_frame_in_roi:
+            # Worker exited ROI - record the event only if no unprocessed events exist
+            if worker_id not in person_events:
+                person_events[worker_id] = []
+            
+            # Check if there's already an unprocessed event for this worker
+            if not any(not e['processed'] for e in person_events[worker_id]):
+                roi_data = worker_in_roi[worker_id]
+                person_events[worker_id].append({
+                    "start_frame": roi_data["start_frame"],
+                    "end_frame": frame_id,
+                    "hand": roi_data["hand"],
+                    "roi_id": roi_data["roi_id"],
+                    "scooper_touched": roi_data["scooper_touched"],
+                    "pizza_touched": roi_data["pizza_touched"],
+                    "processed": False,
+                    "worker_id": worker_id
+                })
+            del worker_in_roi[worker_id]
+
+
+    
+    # Process completed events (when worker exited ROI)
     for pid, events in person_events.items():
         for event in events:
             if event['processed']:
                 continue
-            age = frame_id - event['start_frame']
-            if age <= 50:
-                # Check if this worker is using a scooper
-                worker_id = event['worker_id']
-                hand = event['hand']
-                
-                # Check if any of this worker's current hands are touching a pizza
-                if worker_id in person_hands:
-                    current_worker_hands = person_hands[worker_id]
-                    pizza_touched = any(
-                        any(boxes_overlap(current_hand, pizza, iou_thresh=0.0001) for pizza in pizzas)
-                        for current_hand in current_worker_hands
-                    )
-                    if pizza_touched:
-                        event['pizza_touched'] = True
-                
-                # First check if worker has scoopers assigned to them
-                if worker_id in worker_scoopers and worker_scoopers[worker_id]:
+            
+            age_since_exit = frame_id - event['end_frame']
+            if age_since_exit <= int(3 * fps):
+                current_worker_hands = person_hands[worker_id]
+                pizza_touched = any(
+                    any(boxes_overlap(current_hand, pizza, iou_thresh=0.1) for pizza in pizzas)
+                    for current_hand in current_worker_hands
+                )
+                if pizza_touched:
+                    event['pizza_touched'] = True
+                # Continue checking for scooper usage during grace period
+                scooper_used = any(
+                    any(boxes_overlap(pizza, scooper, iou_thresh=0.1) for scooper in scoopers)
+                    for pizza in pizzas
+                )
+                if scooper_used:
                     event['scooper_touched'] = True
-                # Fallback to checking pizza-scooper overlap
-                else:
-                    scooper_used = any(
-                        any(boxes_overlap(pizza, scooper, iou_thresh=0.0001) for scooper in scoopers)
-                        for pizza in pizzas
-                    )
-                    if scooper_used:
-                        event['scooper_touched'] = True
             else:
-                video_time = event["start_frame"] / fps
+                
+                video_time = event["end_frame"] / fps
                 minutes = int(video_time // 60)
                 seconds = int(video_time % 60)
                 worker_id = event['worker_id']
@@ -248,10 +269,6 @@ while cap.isOpened():
                     print(msg)
                     messages.append(msg)
                     last_safe_frame[worker_id] = frame_id
-                # elif not event['pizza_touched']:
-                #     # Not a violation or safe pickup - worker was likely cleaning or doing something else
-                #     msg = f"[{minutes:02d}:{seconds:02d}] Worker #{worker_id} activity (not pizza-related)"
-                #     print(msg)
                 event['processed'] = True
 
     for cid, roi in SCOOPER_CONTAINERS:
@@ -282,7 +299,7 @@ while cap.isOpened():
             
             cv2.rectangle(frame, (int(coords[0]), int(coords[1])), (int(coords[2]), int(coords[3])), (255, 255, 255), 2)
             cv2.putText(frame, f"Worker #{worker_id}", (int(coords[0]), int(coords[1]) - 5), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
     # Display overall violation count
     cv2.putText(frame, f"Total Violations: {violation_count}", (10, 30),
@@ -292,7 +309,7 @@ while cap.isOpened():
     y_offset = 60
     for worker_id, stats in worker_stats.items():
         cv2.putText(frame, f"Worker #{worker_id}: {stats['violations']} violations, {stats['safe_pickups']} safe", 
-                   (10, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+                (10, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
         y_offset += 25
 
     # Display recent messages

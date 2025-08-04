@@ -15,14 +15,6 @@ from utils import decode_base64_frame
 from shared.config import RABBITMQ_HOST, RABBITMQ_QUEUE, PROCESSED_QUEUE, DB_PATH
 from database import init_db
 
-# Initialize the database
-try:
-    print(f"Initializing database at {DB_PATH}...")
-    init_db(DB_PATH)
-    print("Database initialized successfully!")
-except Exception as e:
-    print(f"Error initializing database: {e}")
-
 # Use a single worker for detection_logic to avoid race conditions with global variables
 # But use a separate thread pool for encoding/publishing to maintain throughput
 executor = ThreadPoolExecutor(max_workers=1)  # Single worker for detection logic
@@ -40,22 +32,14 @@ def encode_frame(frame):
         print(f"[Detector] ❌ Error encoding frame: {e}")
         return ""
 
-def publish_result(result, frame_b64, start_time):
+def publish_result(frame_b64):
     """Handle publishing results to RabbitMQ (runs in separate thread pool)"""
-    message = {
-        "timestamp": result["timestamp"],
-        "frame_id": result["frame_id"],
-        "is_violation": result["is_violation"],
-        "is_safe_pickup": result["is_safe_pickup"],
-        "labels": result["labels"],
-        "boxes": result["boxes"],
-        "frame": frame_b64
-    }
+    message = {"frame": frame_b64}
 
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
         channel = connection.channel()
-        channel.queue_declare(queue=PROCESSED_QUEUE, durable=True)
+        channel.queue_declare(queue=PROCESSED_QUEUE, durable=False)
         channel.confirm_delivery()
 
         message_body = json.dumps(message).encode('utf-8')
@@ -65,8 +49,7 @@ def publish_result(result, frame_b64, start_time):
             body=message_body
         )
 
-        end_time = time.time()
-        print(f"[Detector] 🟢 Frame {result['frame_id']} processed and sent in {end_time - start_time:.2f} seconds")
+
         print("[Detector] ✅ Message published to processed_frames")
 
     except Exception as e:
@@ -102,7 +85,7 @@ def handle_detection_task(body):
     frame_b64 = encode_frame(result["annotated_frame"])
     
     # Submit publishing to a separate thread pool to maintain throughput
-    publish_executor.submit(publish_result, result, frame_b64, start_time)
+    publish_executor.submit(publish_result, frame_b64)
 
 # Dispatch to thread pool
 def callback(ch, method, properties, body):
@@ -112,7 +95,7 @@ def run_detector():
     start_time = time.time()
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = connection.channel()
-    channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
+    channel.queue_declare(queue=RABBITMQ_QUEUE, durable=False)
     
     # Set prefetch count to 1 to ensure we process one frame at a time
     # This helps maintain the correct order of frames and avoid overwhelming the detector

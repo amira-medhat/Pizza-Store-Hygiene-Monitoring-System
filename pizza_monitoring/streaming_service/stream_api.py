@@ -11,45 +11,6 @@ from shared.config import DB_PATH
 import state
 from rabbit_consumer import start_consumer_thread
 
-# Initialize database
-def init_db():
-    print(f"Initializing database at {DB_PATH}...")
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Create table if not exists
-        cursor.execute('''CREATE TABLE IF NOT EXISTS violations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            frame_path TEXT,
-            labels TEXT,
-            boxes TEXT,
-            is_violation INTEGER DEFAULT 0,
-            is_safe_pickup INTEGER DEFAULT 0
-        )''')
-        
-        # Optional: create indexes for summary queries
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_violation ON violations(is_violation)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_safe_pickup ON violations(is_safe_pickup)")
-        
-        # Insert some sample data if table is empty
-        cursor.execute("SELECT COUNT(*) FROM violations")
-        if cursor.fetchone()[0] == 0:
-            cursor.execute('''
-                INSERT INTO violations (timestamp, frame_path, labels, boxes, is_violation, is_safe_pickup)
-                VALUES (?, ?, ?, ?, ?, ?)''',
-                ("2025-07-23T22:40:00", "", "[]", "[]", 0, 1)
-            )
-        
-        conn.commit()
-        conn.close()
-        print("Database initialized successfully!")
-    except Exception as e:
-        print(f"Error initializing database: {e}")
-
-# Initialize the database
-init_db()
 
 app = Flask(__name__)
 
